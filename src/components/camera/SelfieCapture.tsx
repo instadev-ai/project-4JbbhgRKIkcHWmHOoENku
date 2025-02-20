@@ -6,6 +6,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog"
 
 interface SelfieCaptureProps {
@@ -54,6 +55,7 @@ export const SelfieCapture = ({ onCapture, trigger }: SelfieCaptureProps) => {
 
   const toggleCamera = () => {
     setFacingMode(prev => (prev === "user" ? "environment" : "user"))
+    startCamera() // Restart camera with new facing mode
   }
 
   const handleOpenChange = (newOpen: boolean) => {
@@ -94,7 +96,6 @@ export const SelfieCapture = ({ onCapture, trigger }: SelfieCaptureProps) => {
       onCapture(capturedImage)
     }
     setOpen(false)
-    stopCamera()
   }
 
   const handleRetake = () => {
@@ -104,11 +105,14 @@ export const SelfieCapture = ({ onCapture, trigger }: SelfieCaptureProps) => {
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      {trigger || (
-        <Button variant="outline" size="icon">
-          <Camera className="h-4 w-4" />
-        </Button>
-      )}
+      <DialogTrigger asChild>
+        {trigger || (
+          <Button variant="outline" className="gap-2">
+            <Camera className="h-4 w-4" />
+            <span>צלם תמונה</span>
+          </Button>
+        )}
+      </DialogTrigger>
       
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
@@ -140,10 +144,10 @@ export const SelfieCapture = ({ onCapture, trigger }: SelfieCaptureProps) => {
                 <Button
                   variant="default"
                   size="icon"
-                  className="rounded-full"
+                  className="rounded-full h-14 w-14"
                   onClick={capturePhoto}
                 >
-                  <Camera className="h-4 w-4" />
+                  <Camera className="h-6 w-6" />
                 </Button>
               </div>
             </>
