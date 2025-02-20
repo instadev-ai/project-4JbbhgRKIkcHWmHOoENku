@@ -29,7 +29,11 @@ export const SelfieCapture = ({ onCapture, trigger }: SelfieCaptureProps) => {
   const startCamera = useCallback(async () => {
     try {
       const newStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode },
+        video: { 
+          facingMode,
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        },
         audio: false,
       })
       setStream(newStream)
@@ -182,12 +186,12 @@ export const SelfieCapture = ({ onCapture, trigger }: SelfieCaptureProps) => {
           </div>
         ) : (
           <>
-            <div className="relative">
+            <div className="relative aspect-[3/4] w-full overflow-hidden rounded-lg bg-black">
               <video
                 ref={videoRef}
                 autoPlay
                 playsInline
-                className="rounded-lg w-full"
+                className="absolute inset-0 h-full w-full object-cover"
                 style={{ transform: facingMode === "user" ? "scaleX(-1)" : "none" }}
               />
               <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2">
