@@ -6,47 +6,59 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog"
 
 interface SelfieCaptureProps {
-  onCapture?: (image: string) => void
+  onCapture?: (imageData: string) => void
   trigger?: React.ReactNode
 }
 
 export const SelfieCapture = ({ onCapture, trigger }: SelfieCaptureProps) => {
+  const [open, setOpen] = useState(false)
   const [stream, setStream] = useState<MediaStream | null>(null)
   const [facingMode, setFacingMode] = useState<"user" | "environment">("user")
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const [isOpen, setIsOpen] = useState(false)
-  const [overlayType, setOverlayType] = useState<'wanted' | 'crime' | 'drunk' | 'none'>('wanted')
+  const [capturedImage, setCapturedImage] = useState<string | null>(null)
 
   const startCamera = useCallback(async () => {
     try {
-      const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode },
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop())
+      }
+
+      const newStream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: facingMode,
+        },
         audio: false,
       })
-      setStream(mediaStream)
+
+      setStream(newStream)
+
       if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream
+        videoRef.current.srcObject = newStream
       }
     } catch (err) {
       console.error("Error accessing camera:", err)
     }
-  }, [facingMode])
+  }, [facingMode, stream])
 
   const stopCamera = useCallback(() => {
     if (stream) {
       stream.getTracks().forEach(track => track.stop())
       setStream(null)
     }
+    setCapturedImage(null)
   }, [stream])
 
-  const handleOpenChange = (open: boolean) => {
-    setIsOpen(open)
-    if (open) {
+  const toggleCamera = () => {
+    setFacingMode(prev => (prev === "user" ? "environment" : "user"))
+  }
+
+  const handleOpenChange = (newOpen: boolean) => {
+    setOpen(newOpen)
+    if (newOpen) {
       startCamera()
     } else {
       stopCamera()
@@ -57,133 +69,103 @@ export const SelfieCapture = ({ onCapture, trigger }: SelfieCaptureProps) => {
     if (videoRef.current && canvasRef.current) {
       const video = videoRef.current
       const canvas = canvasRef.current
-      const context = canvas.getContext("2d")
-
       canvas.width = video.videoWidth
       canvas.height = video.videoHeight
-      context?.drawImage(video, 0, 0, canvas.width, canvas.height)
 
-      const imageData = canvas.toDataURL("image/jpeg")
-      
-      if (onCapture) {
-        onCapture(imageData)
+      const context = canvas.getContext("2d")
+      if (context) {
+        // Flip the image horizontally if using front camera
+        if (facingMode === "user") {
+          context.scale(-1, 1)
+          context.drawImage(video, -canvas.width, 0, canvas.width, canvas.height)
+          context.scale(-1, 1) // Reset the transformation
+        } else {
+          context.drawImage(video, 0, 0, canvas.width, canvas.height)
+        }
+
+        const imageData = canvas.toDataURL("image/jpeg")
+        setCapturedImage(imageData)
       }
-
-      handleOpenChange(false)
     }
   }
 
-  const toggleCamera = () => {
-    setFacingMode(prev => prev === "user" ? "environment" : "user")
-    if (stream) {
-      stopCamera()
-      setTimeout(startCamera, 300)
+  const handleSave = () => {
+    if (capturedImage && onCapture) {
+      onCapture(capturedImage)
     }
+    setOpen(false)
+    stopCamera()
   }
 
-  const getOverlayClass = () => {
-    switch (overlayType) {
-      case 'wanted':
-        return 'camera-overlay-wanted'
-      case 'crime':
-        return 'camera-overlay-crime'
-      case 'drunk':
-        return 'camera-overlay-drunk'
-      default:
-        return ''
-    }
+  const handleRetake = () => {
+    setCapturedImage(null)
+    startCamera()
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <DialogTrigger asChild>
-        {trigger || (
-          <Button variant="outline" className="gap-2">
-            <Camera className="h-4 w-4" />
-            <span>צלם תמונה</span>
-          </Button>
-        )}
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      {trigger || (
+        <Button variant="outline" size="icon">
+          <Camera className="h-4 w-4" />
+        </Button>
+      )}
+      
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-center">צילום תמונה</DialogTitle>
+          <DialogTitle className="text-right">צלם תמונה</DialogTitle>
         </DialogHeader>
-        <div className="relative">
-          {/* Camera Preview with Overlay */}
-          <div className="relative aspect-[3/4] w-full overflow-hidden rounded-lg bg-black">
-            <video
-              ref={videoRef}
-              autoPlay
-              playsInline
-              className="absolute inset-0 h-full w-full object-cover mirror"
-            />
-            
-            {/* Fun Overlays */}
-            <div className={`absolute inset-0 pointer-events-none ${getOverlayClass()}`} />
-            
-            {/* Corner Decorations */}
-            <div className="absolute top-4 left-4 w-12 h-12 border-l-4 border-t-4 border-white/40" />
-            <div className="absolute top-4 right-4 w-12 h-12 border-r-4 border-t-4 border-white/40" />
-            <div className="absolute bottom-4 left-4 w-12 h-12 border-l-4 border-b-4 border-white/40" />
-            <div className="absolute bottom-4 right-4 w-12 h-12 border-r-4 border-b-4 border-white/40" />
-          </div>
-
-          {/* Controls */}
-          <div className="mt-4 flex flex-col gap-4">
-            {/* Overlay Selection */}
-            <div className="flex justify-center gap-2">
-              <Button
-                variant={overlayType === 'wanted' ? "default" : "outline"}
-                size="sm"
-                onClick={() => setOverlayType('wanted')}
-              >
-                מבוקש
-              </Button>
-              <Button
-                variant={overlayType === 'crime' ? "default" : "outline"}
-                size="sm"
-                onClick={() => setOverlayType('crime')}
-              >
-                פשע
-              </Button>
-              <Button
-                variant={overlayType === 'drunk' ? "default" : "outline"}
-                size="sm"
-                onClick={() => setOverlayType('drunk')}
-              >
-                שיכור
-              </Button>
-              <Button
-                variant={overlayType === 'none' ? "default" : "outline"}
-                size="sm"
-                onClick={() => setOverlayType('none')}
-              >
-                נקי
-              </Button>
-            </div>
-
-            {/* Camera Controls */}
-            <div className="flex justify-center gap-4">
-              <Button
-                variant="outline"
-                size="icon"
-                className="rounded-full"
-                onClick={toggleCamera}
-              >
-                <RotateCw className="h-4 w-4" />
-              </Button>
-              
-              <Button
-                size="icon"
-                className="h-14 w-14 rounded-full capture-button"
-                onClick={capturePhoto}
-              >
-                <ImagePlus className="h-6 w-6" />
-              </Button>
-            </div>
-          </div>
-
-          {/* Hidden canvas for capturing */}
+        <div className="flex flex-col items-center space-y-4">
+          {!capturedImage ? (
+            <>
+              <div className="relative w-full aspect-square overflow-hidden rounded-lg bg-black">
+                <video
+                  ref={videoRef}
+                  autoPlay
+                  playsInline
+                  className={`w-full h-full object-cover ${
+                    facingMode === "user" ? "scale-x-[-1]" : ""
+                  }`}
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="rounded-full"
+                  onClick={toggleCamera}
+                >
+                  <RotateCw className="h-4 w-4" />
+                </Button>
+                
+                <Button
+                  variant="default"
+                  size="icon"
+                  className="rounded-full"
+                  onClick={capturePhoto}
+                >
+                  <Camera className="h-4 w-4" />
+                </Button>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="relative w-full aspect-square overflow-hidden rounded-lg">
+                <img
+                  src={capturedImage}
+                  alt="Captured"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button onClick={handleRetake} variant="outline">
+                  צלם שוב
+                </Button>
+                <Button onClick={handleSave}>
+                  שמור
+                </Button>
+              </div>
+            </>
+          )}
           <canvas ref={canvasRef} className="hidden" />
         </div>
       </DialogContent>
