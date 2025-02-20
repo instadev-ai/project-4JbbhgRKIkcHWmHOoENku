@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback } from "react"
-import { Camera, CameraRotate, ImagePlus } from "lucide-react"
+import { Camera, RotateCw, ImagePlus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -170,7 +170,7 @@ export const SelfieCapture = ({ onCapture, trigger }: SelfieCaptureProps) => {
                 className="rounded-full"
                 onClick={toggleCamera}
               >
-                <CameraRotate className="h-4 w-4" />
+                <RotateCw className="h-4 w-4" />
               </Button>
               
               <Button
