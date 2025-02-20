@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback } from "react"
-import { Camera, FlipCamera, Image as ImageIcon } from "lucide-react"
+import { Camera, CameraRotate, ImagePlus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -170,7 +170,7 @@ export const SelfieCapture = ({ onCapture, trigger }: SelfieCaptureProps) => {
                 className="rounded-full"
                 onClick={toggleCamera}
               >
-                <FlipCamera className="h-4 w-4" />
+                <CameraRotate className="h-4 w-4" />
               </Button>
               
               <Button
@@ -178,7 +178,7 @@ export const SelfieCapture = ({ onCapture, trigger }: SelfieCaptureProps) => {
                 className="h-14 w-14 rounded-full capture-button"
                 onClick={capturePhoto}
               >
-                <ImageIcon className="h-6 w-6" />
+                <ImagePlus className="h-6 w-6" />
               </Button>
             </div>
           </div>
