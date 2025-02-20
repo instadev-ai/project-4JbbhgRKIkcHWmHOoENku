@@ -6,10 +6,10 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import MainLayout from "./components/layout/MainLayout";
 import CrimeFeed from "./components/crimes/CrimeFeed";
 import MissionsList from "./components/missions/MissionsList";
+import ScoreBoard from "./components/scores/ScoreBoard";
 
-// Placeholder components until we build them
-const Scores = () => <div className="p-4">דף ניקוד בבנייה</div>;
-const Profile = () => <div className="p-4">דף פרופיל בבנייה</div>;
+// Placeholder component until we build it
+const Profile = () => <div className="p-4">Profile page coming soon...</div>;
 
 const queryClient = new QueryClient();
 
@@ -23,7 +23,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<CrimeFeed />} />
             <Route path="/missions" element={<MissionsList />} />
-            <Route path="/scores" element={<Scores />} />
+            <Route path="/scores" element={<ScoreBoard />} />
             <Route path="/profile" element={<Profile />} />
           </Routes>
         </MainLayout>
