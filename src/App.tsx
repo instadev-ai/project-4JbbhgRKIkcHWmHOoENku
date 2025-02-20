@@ -5,9 +5,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import MainLayout from "./components/layout/MainLayout";
 import CrimeFeed from "./components/crimes/CrimeFeed";
+import MissionsList from "./components/missions/MissionsList";
 
 // Placeholder components until we build them
-const Missions = () => <div className="p-4">דף משימות בבנייה</div>;
 const Scores = () => <div className="p-4">דף ניקוד בבנייה</div>;
 const Profile = () => <div className="p-4">דף פרופיל בבנייה</div>;
 
@@ -22,7 +22,7 @@ const App = () => (
         <MainLayout>
           <Routes>
             <Route path="/" element={<CrimeFeed />} />
-            <Route path="/missions" element={<Missions />} />
+            <Route path="/missions" element={<MissionsList />} />
             <Route path="/scores" element={<Scores />} />
             <Route path="/profile" element={<Profile />} />
           </Routes>
