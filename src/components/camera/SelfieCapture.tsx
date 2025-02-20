@@ -70,67 +70,32 @@ export const SelfieCapture = ({ onCapture, trigger }: SelfieCaptureProps) => {
     if (videoRef.current && canvasRef.current) {
       const video = videoRef.current
       const canvas = canvasRef.current
-      const context = canvas.getContext("2d")
-
-      if (!context) return
-
-      // Set canvas dimensions to match video
-      canvas.width = video.videoWidth
-      canvas.height = video.videoHeight
-
-      // Draw the video frame to the canvas
-      context.save()
-      if (facingMode === "user") {
-        // Flip horizontally for selfie mode
-        context.scale(-1, 1)
-        context.drawImage(video, -canvas.width, 0, canvas.width, canvas.height)
-      } else {
-        context.drawImage(video, 0, 0, canvas.width, canvas.height)
+      
+      // Set canvas size to match video dimensions
+      canvas.width = video.videoWidth || 640
+      canvas.height = video.videoHeight || 480
+      
+      const ctx = canvas.getContext('2d')
+      if (ctx) {
+        // Handle mirroring for selfie mode
+        if (facingMode === "user") {
+          ctx.scale(-1, 1)
+          ctx.drawImage(video, -canvas.width, 0, canvas.width, canvas.height)
+          ctx.scale(-1, 1)
+        } else {
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+        }
+        
+        // Convert to base64
+        const imageData = canvas.toDataURL('image/jpeg')
+        setCapturedImage(imageData)
       }
-      context.restore()
-
-      // Add overlay effects based on selectedOverlay
-      switch (selectedOverlay) {
-        case "wanted":
-          context.strokeStyle = "red"
-          context.lineWidth = 20
-          context.strokeRect(0, 0, canvas.width, canvas.height)
-          context.font = "60px Arial"
-          context.fillStyle = "red"
-          context.fillText("WANTED", 20, 60)
-          break
-        case "crime":
-          context.strokeStyle = "yellow"
-          context.lineWidth = 20
-          context.strokeRect(0, 0, canvas.width, canvas.height)
-          context.font = "60px Arial"
-          context.fillStyle = "yellow"
-          context.fillText("🚨", canvas.width - 80, 60)
-          break
-        case "drunk":
-          // Add rainbow gradient border
-          const gradient = context.createLinearGradient(0, 0, canvas.width, canvas.height)
-          gradient.addColorStop(0, "red")
-          gradient.addColorStop(0.2, "orange")
-          gradient.addColorStop(0.4, "yellow")
-          gradient.addColorStop(0.6, "green")
-          gradient.addColorStop(0.8, "blue")
-          gradient.addColorStop(1, "violet")
-          context.strokeStyle = gradient
-          context.lineWidth = 20
-          context.strokeRect(0, 0, canvas.width, canvas.height)
-          // Add beer emoji
-          context.font = "60px Arial"
-          context.fillText("🍺", 20, 60)
-          break
-        default:
-          // Clean mode - no overlay
-          break
-      }
-
-      const imageData = canvas.toDataURL("image/jpeg")
-      setCapturedImage(imageData)
     }
+  }
+
+  const handleRetake = () => {
+    setCapturedImage(null)
+    startCamera()
   }
 
   const handleSave = () => {
@@ -140,9 +105,8 @@ export const SelfieCapture = ({ onCapture, trigger }: SelfieCaptureProps) => {
     }
   }
 
-  const handleRetake = () => {
-    setCapturedImage(null)
-    startCamera()
+  const getOverlayClass = () => {
+    return "camera-overlay-wanted"
   }
 
   return (
@@ -151,7 +115,7 @@ export const SelfieCapture = ({ onCapture, trigger }: SelfieCaptureProps) => {
         {trigger || (
           <Button variant="outline" className="gap-2">
             <Camera className="h-4 w-4" />
-            <span>צלם תמונה</span>
+            צלם תמונה
           </Button>
         )}
       </DialogTrigger>
@@ -242,9 +206,4 @@ export const SelfieCapture = ({ onCapture, trigger }: SelfieCaptureProps) => {
       </DialogContent>
     </Dialog>
   )
-}
-
-// Helper function for overlay classes
-const getOverlayClass = () => {
-  return "camera-overlay-wanted"
 }
