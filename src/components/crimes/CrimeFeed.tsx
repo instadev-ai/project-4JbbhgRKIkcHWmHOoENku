@@ -1,6 +1,7 @@
-import { Camera, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { SelfieCapture } from "@/components/camera/SelfieCapture";
 
 const CrimeFeed = () => {
   // זה יוחלף בדאטה אמיתי מהשרת
@@ -23,14 +24,17 @@ const CrimeFeed = () => {
     },
   ];
 
+  const handleCapture = (imageData: string) => {
+    console.log("Captured image:", imageData);
+    // Here we'll later handle the image upload and crime creation
+  };
+
   return (
     <div className="py-4">
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">פשעי המסיבה</h1>
-        <Button size="icon" variant="outline" className="rounded-full">
-          <Camera className="w-5 h-5" />
-        </Button>
+        <SelfieCapture onCapture={handleCapture} />
       </div>
 
       {/* Quick Stats */}
