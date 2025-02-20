@@ -8,37 +8,37 @@ const ScoreBoard = () => {
   const mockPlayers = [
     {
       id: 1,
-      name: "Yossi",
+      name: "יוסי",
       points: 450,
       completedMissions: 8,
-      achievements: ["First Blood", "Party Animal"],
+      achievements: ["פשע ראשון", "חיה במסיבות"],
       drunkLevel: 4,
       streak: 3,
     },
     {
       id: 2,
-      name: "David",
+      name: "דוד",
       points: 380,
       completedMissions: 6,
-      achievements: ["Risk Taker"],
+      achievements: ["מסתכן מקצועי"],
       drunkLevel: 3,
       streak: 1,
     },
     {
       id: 3,
-      name: "Moshe",
+      name: "משה",
       points: 320,
       completedMissions: 5,
-      achievements: ["Social Butterfly"],
+      achievements: ["פרפר חברתי"],
       drunkLevel: 2,
       streak: 2,
     },
     {
       id: 4,
-      name: "Groom",
+      name: "החתן",
       points: 290,
       completedMissions: 4,
-      achievements: ["Bachelor"],
+      achievements: ["עדיין רווק"],
       drunkLevel: 5,
       streak: 0,
     },
@@ -48,20 +48,20 @@ const ScoreBoard = () => {
   const totalMissions = mockPlayers.reduce((sum, player) => sum + player.completedMissions, 0);
 
   return (
-    <div className="py-4">
+    <div className="py-4" dir="rtl">
       {/* Group Stats */}
       <Card className="mb-6 bg-primary/5">
         <CardContent className="p-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="text-center">
-              <h3 className="text-sm font-medium text-muted-foreground">Group Score</h3>
+              <h3 className="text-sm font-medium text-muted-foreground">ניקוד קבוצתי</h3>
               <div className="text-2xl font-bold flex items-center justify-center gap-2">
                 <Trophy className="w-5 h-5 text-yellow-500" />
                 {totalGroupPoints}
               </div>
             </div>
             <div className="text-center">
-              <h3 className="text-sm font-medium text-muted-foreground">Missions Done</h3>
+              <h3 className="text-sm font-medium text-muted-foreground">משימות שהושלמו</h3>
               <div className="text-2xl font-bold flex items-center justify-center gap-2">
                 <Medal className="w-5 h-5 text-blue-500" />
                 {totalMissions}
@@ -74,7 +74,7 @@ const ScoreBoard = () => {
       {/* Leaderboard */}
       <div className="space-y-4">
         <h2 className="text-xl font-bold flex items-center gap-2">
-          <Trophy className="w-5 h-5" /> Leaderboard
+          <Trophy className="w-5 h-5" /> טבלת המובילים
         </h2>
         
         {mockPlayers.map((player, index) => (
@@ -105,10 +105,10 @@ const ScoreBoard = () => {
                   {/* Stats */}
                   <div className="flex gap-2 mt-2">
                     <Badge variant="outline" className="flex items-center gap-1">
-                      <Trophy className="w-3 h-3" /> {player.points}
+                      <Trophy className="w-3 h-3" /> {player.points} נק׳
                     </Badge>
                     <Badge variant="outline" className="flex items-center gap-1">
-                      <Medal className="w-3 h-3" /> {player.completedMissions}
+                      <Medal className="w-3 h-3" /> {player.completedMissions} משימות
                     </Badge>
                     <Badge variant="outline" className="flex items-center gap-1">
                       <Beer className="w-3 h-3" /> {Array(player.drunkLevel).fill("🍺").join("")}
