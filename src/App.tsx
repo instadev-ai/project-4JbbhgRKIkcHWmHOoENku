@@ -7,14 +7,19 @@ import MainLayout from "./components/layout/MainLayout";
 import CrimeFeed from "./components/crimes/CrimeFeed";
 import MissionsList from "./components/missions/MissionsList";
 import ScoreBoard from "./components/scores/ScoreBoard";
+import { UserProfile } from "./components/profile/UserProfile";
 
-// Placeholder component until we build it
-const Profile = () => <div className="p-4">Profile page coming soon...</div>;
-
-const queryClient = new QueryClient();
+// Mock data for development
+const mockUserData = {
+  name: "יוסי המלך",
+  avatarUrl: "https://api.dicebear.com/7.x/fun-emoji/svg?seed=yossi",
+  points: 450,
+  completedMissions: 8,
+  drunkLevel: 3,
+};
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
+  <QueryClientProvider client={new QueryClient()}>
     <TooltipProvider>
       <Toaster />
       <Sonner />
@@ -24,7 +29,10 @@ const App = () => (
             <Route path="/" element={<CrimeFeed />} />
             <Route path="/missions" element={<MissionsList />} />
             <Route path="/scores" element={<ScoreBoard />} />
-            <Route path="/profile" element={<Profile />} />
+            <Route 
+              path="/profile" 
+              element={<UserProfile {...mockUserData} />} 
+            />
           </Routes>
         </MainLayout>
       </BrowserRouter>
