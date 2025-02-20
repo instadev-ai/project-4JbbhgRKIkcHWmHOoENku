@@ -1,5 +1,5 @@
-import { useState, useRef, useCallback } from "react"
-import { Camera, RotateCw, ImagePlus } from "lucide-react"
+import { useState, useRef, useCallback, useEffect } from "react"
+import { Camera, RotateCw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -10,59 +10,62 @@ import {
 } from "@/components/ui/dialog"
 
 interface SelfieCaptureProps {
-  onCapture?: (imageData: string) => void
+  onCapture: (imageData: string) => void
   trigger?: React.ReactNode
 }
+
+type OverlayType = "wanted" | "crime" | "drunk" | "clean"
 
 export const SelfieCapture = ({ onCapture, trigger }: SelfieCaptureProps) => {
   const [open, setOpen] = useState(false)
   const [stream, setStream] = useState<MediaStream | null>(null)
+  const [capturedImage, setCapturedImage] = useState<string | null>(null)
   const [facingMode, setFacingMode] = useState<"user" | "environment">("user")
+  const [selectedOverlay, setSelectedOverlay] = useState<OverlayType>("clean")
+  
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const [capturedImage, setCapturedImage] = useState<string | null>(null)
 
   const startCamera = useCallback(async () => {
     try {
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop())
-      }
-
       const newStream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: facingMode,
-        },
+        video: { facingMode },
         audio: false,
       })
-
       setStream(newStream)
-
       if (videoRef.current) {
         videoRef.current.srcObject = newStream
       }
     } catch (err) {
       console.error("Error accessing camera:", err)
     }
-  }, [facingMode, stream])
+  }, [facingMode])
 
   const stopCamera = useCallback(() => {
     if (stream) {
       stream.getTracks().forEach(track => track.stop())
       setStream(null)
     }
-    setCapturedImage(null)
   }, [stream])
+
+  useEffect(() => {
+    if (open) {
+      startCamera()
+    } else {
+      stopCamera()
+    }
+  }, [open, startCamera, stopCamera])
 
   const toggleCamera = () => {
     setFacingMode(prev => (prev === "user" ? "environment" : "user"))
-    startCamera() // Restart camera with new facing mode
+    stopCamera()
+    startCamera()
   }
 
   const handleOpenChange = (newOpen: boolean) => {
     setOpen(newOpen)
-    if (newOpen) {
-      startCamera()
-    } else {
+    setCapturedImage(null)
+    if (!newOpen) {
       stopCamera()
     }
   }
@@ -71,31 +74,74 @@ export const SelfieCapture = ({ onCapture, trigger }: SelfieCaptureProps) => {
     if (videoRef.current && canvasRef.current) {
       const video = videoRef.current
       const canvas = canvasRef.current
+      const context = canvas.getContext("2d")
+
+      if (!context) return
+
+      // Set canvas dimensions to match video
       canvas.width = video.videoWidth
       canvas.height = video.videoHeight
 
-      const context = canvas.getContext("2d")
-      if (context) {
-        // Flip the image horizontally if using front camera
-        if (facingMode === "user") {
-          context.scale(-1, 1)
-          context.drawImage(video, -canvas.width, 0, canvas.width, canvas.height)
-          context.scale(-1, 1) // Reset the transformation
-        } else {
-          context.drawImage(video, 0, 0, canvas.width, canvas.height)
-        }
-
-        const imageData = canvas.toDataURL("image/jpeg")
-        setCapturedImage(imageData)
+      // Draw the video frame to the canvas
+      context.save()
+      if (facingMode === "user") {
+        // Flip horizontally for selfie mode
+        context.scale(-1, 1)
+        context.drawImage(video, -canvas.width, 0, canvas.width, canvas.height)
+      } else {
+        context.drawImage(video, 0, 0, canvas.width, canvas.height)
       }
+      context.restore()
+
+      // Add overlay effects based on selectedOverlay
+      switch (selectedOverlay) {
+        case "wanted":
+          context.strokeStyle = "red"
+          context.lineWidth = 20
+          context.strokeRect(0, 0, canvas.width, canvas.height)
+          context.font = "60px Arial"
+          context.fillStyle = "red"
+          context.fillText("WANTED", 20, 60)
+          break
+        case "crime":
+          context.strokeStyle = "yellow"
+          context.lineWidth = 20
+          context.strokeRect(0, 0, canvas.width, canvas.height)
+          context.font = "60px Arial"
+          context.fillStyle = "yellow"
+          context.fillText("🚨", canvas.width - 80, 60)
+          break
+        case "drunk":
+          // Add rainbow gradient border
+          const gradient = context.createLinearGradient(0, 0, canvas.width, canvas.height)
+          gradient.addColorStop(0, "red")
+          gradient.addColorStop(0.2, "orange")
+          gradient.addColorStop(0.4, "yellow")
+          gradient.addColorStop(0.6, "green")
+          gradient.addColorStop(0.8, "blue")
+          gradient.addColorStop(1, "violet")
+          context.strokeStyle = gradient
+          context.lineWidth = 20
+          context.strokeRect(0, 0, canvas.width, canvas.height)
+          // Add beer emoji
+          context.font = "60px Arial"
+          context.fillText("🍺", 20, 60)
+          break
+        default:
+          // Clean mode - no overlay
+          break
+      }
+
+      const imageData = canvas.toDataURL("image/jpeg")
+      setCapturedImage(imageData)
     }
   }
 
   const handleSave = () => {
-    if (capturedImage && onCapture) {
+    if (capturedImage) {
       onCapture(capturedImage)
+      setOpen(false)
     }
-    setOpen(false)
   }
 
   const handleRetake = () => {
@@ -116,22 +162,35 @@ export const SelfieCapture = ({ onCapture, trigger }: SelfieCaptureProps) => {
       
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-right">צלם תמונה</DialogTitle>
+          <DialogTitle>צלם תמונה</DialogTitle>
         </DialogHeader>
-        <div className="flex flex-col items-center space-y-4">
-          {!capturedImage ? (
-            <>
-              <div className="relative w-full aspect-square overflow-hidden rounded-lg bg-black">
-                <video
-                  ref={videoRef}
-                  autoPlay
-                  playsInline
-                  className={`w-full h-full object-cover ${
-                    facingMode === "user" ? "scale-x-[-1]" : ""
-                  }`}
-                />
-              </div>
-              <div className="flex gap-2">
+        
+        <canvas ref={canvasRef} style={{ display: "none" }} />
+        
+        {capturedImage ? (
+          <div className="flex flex-col gap-4">
+            <img 
+              src={capturedImage} 
+              alt="Captured" 
+              className="rounded-lg"
+              style={{ transform: facingMode === "user" ? "scaleX(-1)" : "none" }}
+            />
+            <div className="flex justify-center gap-2">
+              <Button onClick={handleRetake}>צלם שוב</Button>
+              <Button onClick={handleSave} variant="default">שמור</Button>
+            </div>
+          </div>
+        ) : (
+          <>
+            <div className="relative">
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                className="rounded-lg w-full"
+                style={{ transform: facingMode === "user" ? "scaleX(-1)" : "none" }}
+              />
+              <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2">
                 <Button
                   variant="outline"
                   size="icon"
@@ -140,7 +199,36 @@ export const SelfieCapture = ({ onCapture, trigger }: SelfieCaptureProps) => {
                 >
                   <RotateCw className="h-4 w-4" />
                 </Button>
-                
+              </div>
+            </div>
+            <div className="flex flex-col gap-4">
+              <div className="flex justify-center gap-2">
+                <Button
+                  variant={selectedOverlay === "wanted" ? "default" : "outline"}
+                  onClick={() => setSelectedOverlay("wanted")}
+                >
+                  מבוקש
+                </Button>
+                <Button
+                  variant={selectedOverlay === "crime" ? "default" : "outline"}
+                  onClick={() => setSelectedOverlay("crime")}
+                >
+                  פשע
+                </Button>
+                <Button
+                  variant={selectedOverlay === "drunk" ? "default" : "outline"}
+                  onClick={() => setSelectedOverlay("drunk")}
+                >
+                  שיכור
+                </Button>
+                <Button
+                  variant={selectedOverlay === "clean" ? "default" : "outline"}
+                  onClick={() => setSelectedOverlay("clean")}
+                >
+                  נקי
+                </Button>
+              </div>
+              <div className="flex justify-center">
                 <Button
                   variant="default"
                   size="icon"
@@ -150,28 +238,9 @@ export const SelfieCapture = ({ onCapture, trigger }: SelfieCaptureProps) => {
                   <Camera className="h-6 w-6" />
                 </Button>
               </div>
-            </>
-          ) : (
-            <>
-              <div className="relative w-full aspect-square overflow-hidden rounded-lg">
-                <img
-                  src={capturedImage}
-                  alt="Captured"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div className="flex gap-2">
-                <Button onClick={handleRetake} variant="outline">
-                  צלם שוב
-                </Button>
-                <Button onClick={handleSave}>
-                  שמור
-                </Button>
-              </div>
-            </>
-          )}
-          <canvas ref={canvasRef} className="hidden" />
-        </div>
+            </div>
+          </>
+        )}
       </DialogContent>
     </Dialog>
   )
