@@ -29,6 +29,7 @@ export const SelfieCapture = ({ onCapture, trigger }: SelfieCaptureProps) => {
 
   const startCamera = useCallback(async () => {
     try {
+      console.log("Starting camera with facing mode:", facingMode)
       if (stream) {
         stream.getTracks().forEach(track => track.stop())
       }
@@ -36,6 +37,7 @@ export const SelfieCapture = ({ onCapture, trigger }: SelfieCaptureProps) => {
         video: { facingMode },
         audio: false,
       })
+      console.log("Camera stream obtained successfully")
       setStream(newStream)
       if (videoRef.current) {
         videoRef.current.srcObject = newStream
@@ -46,6 +48,7 @@ export const SelfieCapture = ({ onCapture, trigger }: SelfieCaptureProps) => {
   }, [facingMode, stream])
 
   const stopCamera = useCallback(() => {
+    console.log("Stopping camera")
     if (stream) {
       stream.getTracks().forEach(track => track.stop())
       setStream(null)
@@ -53,6 +56,7 @@ export const SelfieCapture = ({ onCapture, trigger }: SelfieCaptureProps) => {
   }, [stream])
 
   const handleOpenChange = (open: boolean) => {
+    console.log("Dialog open state changing to:", open)
     setIsOpen(open)
     if (open) {
       setCapturedImage(null)
@@ -63,11 +67,13 @@ export const SelfieCapture = ({ onCapture, trigger }: SelfieCaptureProps) => {
   }
 
   const toggleCamera = () => {
+    console.log("Toggling camera")
     setFacingMode(prev => prev === "user" ? "environment" : "user")
     startCamera()
   }
 
   const capturePhoto = () => {
+    console.log("Attempting to capture photo")
     if (!isVideoReady) {
       console.log("Video not ready yet")
       return
@@ -76,6 +82,8 @@ export const SelfieCapture = ({ onCapture, trigger }: SelfieCaptureProps) => {
     if (videoRef.current && canvasRef.current) {
       const video = videoRef.current
       const canvas = canvasRef.current
+      
+      console.log("Video dimensions:", video.videoWidth, video.videoHeight)
       
       // Set canvas size to match video dimensions
       canvas.width = video.videoWidth || 640
@@ -94,19 +102,24 @@ export const SelfieCapture = ({ onCapture, trigger }: SelfieCaptureProps) => {
         
         // Convert to base64
         const imageData = canvas.toDataURL('image/jpeg')
+        console.log("Photo captured successfully")
         setCapturedImage(imageData)
         stopCamera() // Stop the camera after capturing
       }
+    } else {
+      console.log("Video or canvas ref not available")
     }
   }
 
   const handleRetake = () => {
+    console.log("Retaking photo")
     setCapturedImage(null)
     startCamera()
   }
 
   const handleSave = () => {
     if (capturedImage) {
+      console.log("Saving captured image")
       onCapture(capturedImage)
       handleOpenChange(false)
     }
