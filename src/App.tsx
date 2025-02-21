@@ -8,6 +8,7 @@ import CrimeFeed from "./components/crimes/CrimeFeed";
 import MissionsList from "./components/missions/MissionsList";
 import ScoreBoard from "./components/scores/ScoreBoard";
 import { UserProfile } from "./components/profile/UserProfile";
+import { CompletedMissions } from "./components/missions/CompletedMissions";
 
 // Mock data for development
 const mockUserData = {
@@ -27,7 +28,12 @@ const App = () => (
         <MainLayout>
           <Routes>
             <Route path="/" element={<CrimeFeed />} />
-            <Route path="/missions" element={<MissionsList />} />
+            <Route path="/missions" element={
+              <div className="space-y-8">
+                <MissionsList />
+                <CompletedMissions />
+              </div>
+            } />
             <Route path="/scores" element={<ScoreBoard />} />
             <Route 
               path="/profile" 
