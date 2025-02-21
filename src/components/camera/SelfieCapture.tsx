@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react"
+import { useState, useRef, useCallback, useEffect } from "react"
 import { Camera, RotateCw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -22,6 +22,7 @@ export const SelfieCapture = ({ onCapture, trigger }: SelfieCaptureProps) => {
   const [facingMode, setFacingMode] = useState<"user" | "environment">("user")
   const [selectedOverlay, setSelectedOverlay] = useState<OverlayType>("clean")
   const [isOpen, setIsOpen] = useState(false)
+  const [isVideoReady, setIsVideoReady] = useState(false)
   
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -67,6 +68,11 @@ export const SelfieCapture = ({ onCapture, trigger }: SelfieCaptureProps) => {
   }
 
   const capturePhoto = () => {
+    if (!isVideoReady) {
+      console.log("Video not ready yet")
+      return
+    }
+
     if (videoRef.current && canvasRef.current) {
       const video = videoRef.current
       const canvas = canvasRef.current
@@ -105,6 +111,23 @@ export const SelfieCapture = ({ onCapture, trigger }: SelfieCaptureProps) => {
       handleOpenChange(false)
     }
   }
+
+  // Handle video ready state
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video) return
+
+    const handleLoadedMetadata = () => {
+      console.log("Video metadata loaded")
+      setIsVideoReady(true)
+    }
+
+    video.addEventListener('loadedmetadata', handleLoadedMetadata)
+
+    return () => {
+      video.removeEventListener('loadedmetadata', handleLoadedMetadata)
+    }
+  }, [])
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
